@@ -1,16 +1,12 @@
 import { Router } from 'express';
+import { listAdjustments, createAdjustment } from '../controllers/adjustment.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
-// import { requireRole } from '../middleware/roleCheck.js';
-// import { ROLES } from '../config/constants.js';
+import { validateBody } from '../middleware/validateInput.js';
 
 const router = Router();
 router.use(requireAuth);
 
-// See docs/API.md -> "Stock Adjustments" section for the full contract.
-// TODO: implement a adjustment.controller.js following the pattern in
-// product.controller.js (asyncHandler + ok/fail + Mongo transaction for
-// anything that mutates StockQuant / writes to StockLedger).
-
-router.get('/', (req, res) => res.json({ success: true, data: [], meta: { page: 1, limit: 20, total: 0 } }));
+router.get('/', listAdjustments);
+router.post('/', validateBody({ required: ['product', 'warehouse', 'location', 'countedQty'], nonNegative: ['countedQty'] }), createAdjustment);
 
 export default router;

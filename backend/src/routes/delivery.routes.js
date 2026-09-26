@@ -1,16 +1,25 @@
 import { Router } from 'express';
+import {
+	listDeliveries,
+	getDelivery,
+	createDelivery,
+	updateDelivery,
+	pickDelivery,
+	validateDelivery,
+	cancelDelivery,
+} from '../controllers/delivery.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
-// import { requireRole } from '../middleware/roleCheck.js';
-// import { ROLES } from '../config/constants.js';
+import { validateBody } from '../middleware/validateInput.js';
 
 const router = Router();
 router.use(requireAuth);
 
-// See docs/API.md -> "Delivery Orders (outgoing)" section for the full contract.
-// TODO: implement a delivery.controller.js following the pattern in
-// product.controller.js (asyncHandler + ok/fail + Mongo transaction for
-// anything that mutates StockQuant / writes to StockLedger).
-
-router.get('/', (req, res) => res.json({ success: true, data: [], meta: { page: 1, limit: 20, total: 0 } }));
+router.get('/', listDeliveries);
+router.get('/:id', getDelivery);
+router.post('/', validateBody({ required: ['customer', 'warehouse', 'sourceLocation', 'lines'], arrays: ['lines'] }), createDelivery);
+router.put('/:id', validateBody({ arrays: ['lines'] }), updateDelivery);
+router.post('/:id/pick', pickDelivery);
+router.post('/:id/validate', validateDelivery);
+router.post('/:id/cancel', cancelDelivery);
 
 export default router;

@@ -1,16 +1,10 @@
 import { Router } from 'express';
+import { listLedgerEntries } from '../controllers/ledger.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
-// import { requireRole } from '../middleware/roleCheck.js';
-// import { ROLES } from '../config/constants.js';
 
 const router = Router();
 router.use(requireAuth);
 
-// See docs/API.md -> "Move History / Stock Ledger" section for the full contract.
-// TODO: implement a ledger.controller.js following the pattern in
-// product.controller.js (asyncHandler + ok/fail + Mongo transaction for
-// anything that mutates StockQuant / writes to StockLedger).
-
-router.get('/', (req, res) => res.json({ success: true, data: [], meta: { page: 1, limit: 20, total: 0 } }));
+router.get('/', listLedgerEntries);
 
 export default router;

@@ -1,16 +1,21 @@
 import { Router } from 'express';
+import {
+	listTransfers,
+	createTransfer,
+	updateTransfer,
+	validateTransfer,
+	cancelTransfer,
+} from '../controllers/transfer.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
-// import { requireRole } from '../middleware/roleCheck.js';
-// import { ROLES } from '../config/constants.js';
+import { validateBody } from '../middleware/validateInput.js';
 
 const router = Router();
 router.use(requireAuth);
 
-// See docs/API.md -> "Internal Transfers" section for the full contract.
-// TODO: implement a transfer.controller.js following the pattern in
-// product.controller.js (asyncHandler + ok/fail + Mongo transaction for
-// anything that mutates StockQuant / writes to StockLedger).
-
-router.get('/', (req, res) => res.json({ success: true, data: [], meta: { page: 1, limit: 20, total: 0 } }));
+router.get('/', listTransfers);
+router.post('/', validateBody({ required: ['warehouse', 'fromLocation', 'toLocation', 'lines'], arrays: ['lines'] }), createTransfer);
+router.put('/:id', validateBody({ arrays: ['lines'] }), updateTransfer);
+router.post('/:id/validate', validateTransfer);
+router.post('/:id/cancel', cancelTransfer);
 
 export default router;

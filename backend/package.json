@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "test": "jest"
+    "test": "jest",
+    "smoke": "node scripts/stock-smoke.js"
   },
   "dependencies": {
     "express": "^4.19.2",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.4",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.2.0"
   }
 }

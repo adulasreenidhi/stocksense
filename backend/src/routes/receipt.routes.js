@@ -1,16 +1,23 @@
 import { Router } from 'express';
+import {
+  listReceipts,
+  getReceipt,
+  createReceipt,
+  updateReceipt,
+  validateReceipt,
+  cancelReceipt,
+} from '../controllers/receipt.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
-// import { requireRole } from '../middleware/roleCheck.js';
-// import { ROLES } from '../config/constants.js';
+import { validateBody } from '../middleware/validateInput.js';
 
 const router = Router();
 router.use(requireAuth);
 
-// See docs/API.md -> "Receipts (incoming)" section for the full contract.
-// TODO: implement a receipt.controller.js following the pattern in
-// product.controller.js (asyncHandler + ok/fail + Mongo transaction for
-// anything that mutates StockQuant / writes to StockLedger).
-
-router.get('/', (req, res) => res.json({ success: true, data: [], meta: { page: 1, limit: 20, total: 0 } }));
+router.get('/', listReceipts);
+router.get('/:id', getReceipt);
+router.post('/', validateBody({ required: ['supplier', 'warehouse', 'destinationLocation', 'lines'], arrays: ['lines'] }), createReceipt);
+router.put('/:id', validateBody({ arrays: ['lines'] }), updateReceipt);
+router.post('/:id/validate', validateReceipt);
+router.post('/:id/cancel', cancelReceipt);
 
 export default router;

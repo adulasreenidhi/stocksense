@@ -3,11 +3,10 @@ import mongoose from 'mongoose';
 const stockLedgerSchema = new mongoose.Schema(
   {
     type: { type: String, enum: ['receipt', 'delivery', 'transfer', 'adjustment'], required: true },
-    refDoc: { type: mongoose.Schema.Types.ObjectId, refPath: 'refModel', required: true },
+    refDoc: { type: mongoose.Schema.Types.ObjectId, refPath: 'refModel' },
     refModel: {
       type: String,
       enum: ['Receipt', 'DeliveryOrder', 'InternalTransfer', 'StockAdjustment'],
-      required: true,
     },
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     warehouse: { type: mongoose.Schema.Types.ObjectId, ref: 'Warehouse', required: true },
