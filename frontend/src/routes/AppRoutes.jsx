@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute.jsx';
 
 import LoginPage from '../pages/LoginPage.jsx';
@@ -20,6 +20,7 @@ export default function AppRoutes() {
       <Route path="/signup" element={<SignupPage />} />
 
       <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/receipts" element={<ReceiptsPage />} />
@@ -31,8 +32,12 @@ export default function AppRoutes() {
       </Route>
 
       <Route element={<ProtectedRoute roles={['inventory_manager']} />}>
+        <Route path="/settings" element={<Navigate to="/settings/warehouses" replace />} />
         <Route path="/settings/warehouses" element={<WarehousesPage />} />
       </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }

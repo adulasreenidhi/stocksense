@@ -10,8 +10,25 @@ function signAccessToken(user) {
   return jwt.sign(
     { id: user._id, role: user.role, email: user.email },
     process.env.JWT_ACCESS_SECRET,
-    { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN }
+    { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' }
   );
+}
+
+function signRefreshToken(user) {
+  return jwt.sign(
+    { id: user._id },
+    process.env.JWT_REFRESH_SECRET,
+    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+  );
+}
+
+function setRefreshCookie(res, token) {
+  res.cookie('refreshToken', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
 }
 
 export const signup = asyncHandler(async (req, res) => {
@@ -20,10 +37,12 @@ export const signup = asyncHandler(async (req, res) => {
   if (exists) return fail(res, 'Email already registered', 409);
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const user = await User.create({ name, email, passwordHash, role });
+  const user = await User.create({ name, email, passwordHash, role: role || 'inventory_manager' });
   const accessToken = signAccessToken(user);
+  const refreshToken = signRefreshToken(user);
+  setRefreshCookie(res, refreshToken);
 
-  return ok(res, { user: { id: user._id, name, email, role }, accessToken }, null, 201);
+  return ok(res, { user: { id: user._id, name, email, role: user.role }, accessToken }, null, 201);
 });
 
 export const login = asyncHandler(async (req, res) => {
@@ -35,10 +54,37 @@ export const login = asyncHandler(async (req, res) => {
   if (!match) return fail(res, 'Invalid credentials', 401);
 
   const accessToken = signAccessToken(user);
+  const refreshToken = signRefreshToken(user);
+  setRefreshCookie(res, refreshToken);
+
   return ok(res, {
     user: { id: user._id, name: user.name, email: user.email, role: user.role },
     accessToken,
   });
+});
+
+export const refresh = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies?.refreshToken;
+  if (!refreshToken) return fail(res, 'No refresh token provided', 401);
+
+  try {
+    const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) return fail(res, 'User not found', 401);
+
+    const accessToken = signAccessToken(user);
+    return ok(res, {
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      accessToken,
+    });
+  } catch (err) {
+    return fail(res, 'Invalid or expired refresh token', 401);
+  }
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax' });
+  return res.status(204).send();
 });
 
 export const requestOtp = asyncHandler(async (req, res) => {
